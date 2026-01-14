@@ -1,8 +1,8 @@
 """
-Google Earth Engine Landsat Mosaic Generator for Paraguay
+Google Earth Engine Landsat Mosaic Generator for PARAGUAY
 ===========================================================
 
-This script generates annual Landsat mosaics for Paraguay using Google Earth Engine.
+This script generates annual Landsat mosaics for PARAGUAY using Google Earth Engine.
 It processes Landsat Collection 2 imagery (Landsat 4-9) with cloud/shadow masking,
 spectral indices calculation, and SMA (Spectral Mixture Analysis) to create
 analysis-ready composite images organized by grid tiles.
@@ -34,8 +34,8 @@ from modules.Mosaic import *
 # Prevent Python from writing .pyc files
 sys.dont_write_bytecode = True
 
-# Initialize Google Earth Engine with MapBiomas Paraguay project
-ee.Initialize(project = "mapbiomas-paraguay")
+# Initialize Google Earth Engine with MapBiomas PARAGUAY project
+ee.Initialize(project = "mapbiomas-mosaics")
 
 # ============================================================================
 # CONFIGURATION PARAMETERS
@@ -49,6 +49,8 @@ gridsAsset = 'projects/mapbiomas-workspace/AUXILIAR/cim-world-1-250000'
 
 # Asset path for Landsat tile masks (removes image edge artifacts)
 assetMasks = "projects/mapbiomas-workspace/AUXILIAR/landsat-mask"
+
+
 
 # Territory names to process (no spaces allowed)
 territoryNames = [
@@ -73,49 +75,17 @@ dataFilter = {
 # Currently only SE-20-Z-C is active; 
 gridNames = {
     "PARAGUAY":[ 
-    "SE-20-Z-C",
-    # "SE-20-Z-D",
-    # "SE-21-Y-A",
-    # "SE-21-Y-C",
-    # "SE-21-Y-D",
-    # "SF-20-X-A",
-    # "SF-20-X-B",
-    # "SF-20-X-C",
-    # "SF-20-X-D",
-    # "SF-20-Z-A",
-    # "SF-20-Z-B",
-    # "SF-20-Z-C",
-    # "SF-20-Z-D",
-    # "SF-21-V-A",
-    # "SF-21-V-B",
-    # "SF-21-V-C",
-    # "SF-21-V-D",
-    # "SF-21-Y-A",
-    # "SF-21-Y-B",
-    # "SF-21-Y-C",
-    # "SF-21-Y-D",
-    # "SF-21-Z-A",
-    # "SF-21-Z-C",
-    # "SF-21-Z-D",
-    # "SG-20-X-B",
-    # "SG-21-V-A",
-    # "SG-21-V-B",
-    # "SG-21-V-C",
-    # "SG-21-V-D",
-    # "SG-21-X-A",
-    # "SG-21-X-B",
-    # "SG-21-X-C",
-    # "SG-21-X-D",
-    # "SG-21-Y-A",
-    # "SG-21-Y-B",
-    # "SG-21-Y-C",
-    # "SG-21-Y-D",
-    # "SG-21-Z-A",
-    # "SG-21-Z-B",
-    # "SG-21-Z-C",
-    # "SG-21-Z-D"
+    "SE-20-Z-C", "SE-20-Z-D", "SE-21-Y-C", "SE-21-Y-D", "SF-20-X-A", "SF-20-X-B", 
+    "SF-20-X-C", "SF-20-X-D", "SF-20-Z-A", "SF-20-Z-B", "SF-20-Z-C", "SF-20-Z-D", 
+    "SF-21-V-A", "SF-21-V-B", "SF-21-V-C", "SF-21-V-D", "SF-21-X-C", "SF-21-X-D", 
+    "SF-21-Y-A", "SF-21-Y-B", "SF-21-Y-C", "SF-21-Y-D", "SF-21-Z-A", "SF-21-Z-B", 
+    "SF-21-Z-C", "SF-21-Z-D", "SG-20-X-B", "SG-21-V-A", "SG-21-V-B", "SG-21-V-C", 
+    "SG-21-V-D", "SG-21-X-A", "SG-21-X-B", "SG-21-X-C", "SG-21-X-D", "SG-21-Y-A", 
+    "SG-21-Y-B", "SG-21-Y-C", "SG-21-Y-D", "SG-21-Z-A", "SG-21-Z-B", "SG-21-Z-C", 
+    "SG-21-Z-D"
     ]
 }
+
 
 # Google Earth Engine Collection IDs for Landsat satellites (Collection 2, Tier 1, Level 2)
 collectionIds = {
@@ -137,11 +107,11 @@ landsatIds = {
 
 # Output asset collections for each Landsat sensor
 outputCollections = {
-    'l4': 'projects/mapbiomas-mosaics/assets/LANDSAT/LULC/PARAGUAY/mosaics-1',
-    'l5': 'projects/mapbiomas-mosaics/assets/LANDSAT/LULC/PARAGUAY/mosaics-1',
-    'l7': 'projects/mapbiomas-mosaics/assets/LANDSAT/LULC/PARAGUAY/mosaics-1',
-    'l8': 'projects/mapbiomas-mosaics/assets/LANDSAT/LULC/PARAGUAY/mosaics-1',
-    'l9': 'projects/mapbiomas-mosaics/assets/LANDSAT/LULC/PARAGUAY/mosaics-1'
+    'l4': 'projects/mapbiomas-mosaics/assets/LANDSAT/LULC/PARAGUAY/mosaics-2',
+    'l5': 'projects/mapbiomas-mosaics/assets/LANDSAT/LULC/PARAGUAY/mosaics-2',
+    'l7': 'projects/mapbiomas-mosaics/assets/LANDSAT/LULC/PARAGUAY/mosaics-2',
+    'l8': 'projects/mapbiomas-mosaics/assets/LANDSAT/LULC/PARAGUAY/mosaics-2',
+    'l9': 'projects/mapbiomas-mosaics/assets/LANDSAT/LULC/PARAGUAY/mosaics-2'
 }
 
 # Buffer size in meters to expand grid boundaries (reduces edge effects)
@@ -150,60 +120,56 @@ bufferSize = 100
 # Year and satellite combinations to process
 # Format: [year, satellite_code]
 yearsSat = [
-    # [2024, 'l8'],
-    # [2024, 'l9'],
-    # [2023, 'l9'],
-    # [2023, 'l8'],
-    # [2022, 'l8'],
-    # [2021, 'l8'], 
-    # [2020, 'l8'], 
-    # [2019, 'l8'],
-    # [2018, 'l8'], 
-    # [2017, 'l8'], 
-    # [2016, 'l8'],
-    # [2015, 'l8'], 
-    # [2014, 'l8'], 
-    # [2013, 'l8'],
-    # [2011, 'l5'], 
-    # [2010, 'l5'], 
-    # [2009, 'l5'],
-    # [2008, 'l5'], 
-    # [2007, 'l5'], 
-    # [2006, 'l5'],
-    # [2005, 'l5'], 
-    # [2004, 'l5'], 
+    [2025, 'l9'],
+    # [2025, 'l8'],
+    [2024, 'l8'],
+    [2024, 'l9'],
+    [2023, 'l9'],
+    [2023, 'l8'],
+    [2022, 'l8'],
+    [2021, 'l8'], 
+    [2020, 'l8'], 
+    [2019, 'l8'],
+    [2018, 'l8'], 
+    [2017, 'l8'], 
+    [2016, 'l8'],
+    [2015, 'l8'], 
+    [2014, 'l8'], 
+    [2013, 'l8'],
+    [2012, 'l7'], 
+    [2011, 'l5'], 
+    [2010, 'l5'], 
+    [2009, 'l5'],
+    [2008, 'l5'], 
+    [2007, 'l5'], 
+    [2006, 'l5'],
+    [2005, 'l5'], 
+    [2004, 'l5'], 
+    [2003, 'l5'],
+    [2002, 'l7'], 
+    [2001, 'l7'], 
+    [2000, 'l7'],
+    [1999, 'l5'], 
+    [1998, 'l5'], 
+    [1997, 'l5'],
+    [1996, 'l5'], 
+    [1995, 'l5'], 
+    [1994, 'l5'],
+    [1993, 'l5'], 
+    [1992, 'l5'], 
+    [1991, 'l5'],
+    [1990, 'l5'], 
+    [1989, 'l5'], 
+    [1988, 'l5'],
+    [1987, 'l5'], 
+    [1986, 'l5'], 
+    [1985, 'l5'],
+
     # [2003, 'l5'],
     # [2002, 'l5'], 
     # [2001, 'l5'], 
     # [2000, 'l5'],
-    # [1999, 'l5'], 
-    # [1998, 'l5'], 
-    # [1997, 'l5'],
-    # [1996, 'l5'], 
-    # [1995, 'l5'], 
-    # [1994, 'l5'],
-    # [1993, 'l5'], 
-    # [1992, 'l5'], 
-    # [1991, 'l5'],
-    # [1990, 'l5'], 
-    # [1989, 'l5'], 
-    # [1988, 'l5'],
-    # [1987, 'l5'], 
-    # [1986, 'l5'], 
-    # [1985, 'l5'],
-    # [2003, 'l7'],
-    # [2002, 'l7'], 
-    # [2001, 'l7'], 
-    # [2000, 'l7'],
-    # [2021, 'l7'],
-    # [2020, 'l7'], 
-    # [2019, 'l7'], 
-    # [2018, 'l7'],
-    # [2017, 'l7'], 
-    # [2016, 'l7'], 
-    # [2015, 'l7'],
-    # [2014, 'l7'], 
-    # [2013, 'l7'],
+
     # [2012, 'l7'], 
     # [2011, 'l7'], 
     # [2010, 'l7'], 
@@ -366,6 +332,7 @@ for territoryName in territoryNames:
                 alreadyInCollection = ee.ImageCollection(outputCollections[satellite]) \
                     .filterMetadata('year', 'equals', year) \
                     .filterMetadata('territory', 'equals', territoryName) \
+                    .filterMetadata('version', 'equals', version[territoryName]) \
                     .reduceColumns(ee.Reducer.toList(), ['system:index']) \
                     .get('list') \
                     .getInfo()
@@ -377,9 +344,10 @@ for territoryName in territoryNames:
                     satellite.upper() + '-' + \
                     str(version[territoryName])
                 
+                
                 # Skip if mosaic already exists
                 if outputName not in alreadyInCollection:
-                    
+                    # print(outputName)
                     # Define processing geometry with buffer
                     grid = grids.filter(ee.Filter.eq('name', gridName))
                     grid = ee.Feature(grid.first()).geometry()\
@@ -411,7 +379,7 @@ for territoryName in territoryNames:
                     if len(tiles) > 0:
                         # Process each Landsat tile separately to apply tile-specific masks
                         for tile in tiles:
-                            print(tile['path'], tile['row'])
+                            # print(tile['path'], tile['row'])
 
                             # Filter collection to this specific path/row
                             subcollection = collection \
@@ -481,10 +449,10 @@ for territoryName in territoryNames:
 
                         # Generate annual mosaic using percentile-based compositing
                         # Pantanal uses NDWI (water index), others use NDVI (vegetation)
-                        if territoryName in ['PANTANAL']:
-                            percentileBand = 'ndwi'
-                        else:
-                            percentileBand = 'ndvi'
+                        # if territoryName in ['PANTANAL']:
+                        #     percentileBand = 'ndwi'
+                        # else:
+                        percentileBand = 'ndvi'
 
                         mosaic = getMosaic(collection,
                                            percentileDry=25,      # 25th percentile (dry season)
@@ -498,7 +466,7 @@ for territoryName in territoryNames:
                         mosaic = getSlope(mosaic)     # Terrain slope
                         
                         # Set appropriate data types for each band
-                        mosaic = setBandTypes(mosaic, mtype="paraguay")
+                        mosaic = setBandTypes(mosaic)
 
                         # Add metadata properties
                         mosaic = mosaic.set('year', year)
@@ -508,7 +476,7 @@ for territoryName in territoryNames:
                         mosaic = mosaic.set('territory', territoryName)
                         mosaic = mosaic.set('satellite', satellite)
 
-                        print(outputName)
+                        # print(outputName)
 
                         # Export mosaic to Earth Engine asset
                         task = ee.batch.Export.image.toAsset(
