@@ -323,3 +323,39 @@ class QueueFullTests(unittest.TestCase):
         # a full queue is not a failure; nothing should be recorded as one
         self.assertEqual(len(out['failed']), 0)
 
+
+class ProgressTaskMatchingTests(unittest.TestCase):
+    """An asset keeps the cell's hyphens; a task description cannot have them.
+    Tracking has to know that, or it reports nothing as running."""
+
+    def test_a_running_task_is_recognised(self):
+        from unittest import mock
+        from pipeline import run_production as rp
+
+        # what Earth Engine would report: description with underscores
+        operations = [{'metadata': {'description': 'NC_43_X_D_2019',
+                                    'state': 'RUNNING'}},
+                      {'metadata': {'description': 'NC_43_X_D_2020',
+                                    'state': 'PENDING'}}]
+        with mock.patch.object(rp.ee.data, 'listAssets',
+                               return_value={'assets': []}), \
+             mock.patch.object(rp.ee.data, 'listOperations',
+                               return_value=operations):
+            out = rp.progress(collection_path='projects/x/assets/y',
+                              cells=['NC-43-X-D'], first_year=2019,
+                              last_year=2020)
+        self.assertEqual(out['running'], ['NC-43-X-D_2019'])
+        self.assertEqual(out['pending'], ['NC-43-X-D_2020'])
+        self.assertEqual(out['not_started'], 0)
+
+    def test_a_finished_asset_is_recognised(self):
+        from unittest import mock
+        from pipeline import run_production as rp
+        assets = {'assets': [{'id': 'projects/x/assets/y/NC-43-X-D_2019'}]}
+        with mock.patch.object(rp.ee.data, 'listAssets', return_value=assets), \
+             mock.patch.object(rp.ee.data, 'listOperations', return_value=[]):
+            out = rp.progress(collection_path='projects/x/assets/y',
+                              cells=['NC-43-X-D'], first_year=2019,
+                              last_year=2019)
+        self.assertEqual(out['finished'], ['NC-43-X-D_2019'])
+

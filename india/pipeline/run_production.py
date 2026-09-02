@@ -304,6 +304,11 @@ def progress(collection_path=None, cells=None, first_year=None,
                    else collection_path)
     work = plan(cells, first_year, last_year)
     expected = {'{}_{}'.format(cell, year) for cell, year in work}
+    # An asset keeps the cell's hyphens (NC-43-X-D_2019) but Earth Engine does
+    # not allow a hyphen in a task's description, so build.export swaps them
+    # for underscores when it queues the work. Map the one back to the other,
+    # or nothing running would ever be recognised.
+    by_task_description = {name.replace('-', '_'): name for name in expected}
 
     # What has landed in the collection already.
     try:
@@ -319,8 +324,8 @@ def progress(collection_path=None, cells=None, first_year=None,
     try:
         for op in ee.data.listOperations():
             meta = op.get('metadata', {})
-            name = meta.get('description', '')
-            if name not in expected:
+            name = by_task_description.get(meta.get('description', ''))
+            if name is None:
                 continue
             state = meta.get('state')
             if state == 'RUNNING':
