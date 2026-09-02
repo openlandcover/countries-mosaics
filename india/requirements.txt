@@ -3,3 +3,6 @@
 # (2026-08-30); newer earthengine-api versions are usually fine but
 # verify a trial export before a national run.
 earthengine-api>=1.5,<2
+
+# The notebook front end (notebooks/run_mosaics.ipynb).
+notebook>=7,<8

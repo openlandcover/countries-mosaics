@@ -45,8 +45,13 @@ Earth Engine, so it works after you close the notebook, and from a
 different machine than the one that started the run.
 
 You need Python with the packages in `requirements.txt` installed
-(`pip install -r requirements.txt`) and a Google Earth Engine account
-whose project you name in `pipeline/config.py` (`EE_PROJECT`).
+(`pip install -r requirements.txt`) and a Google Earth Engine account.
+You do not need to edit any code: your cloud project and your
+destination are both set in the notebook's first cell.
+
+**Step-by-step instructions are in [RUNNING.md](RUNNING.md)**, written
+for someone who has just cloned this and has not seen it before. Start
+there.
 
 ## Run at scale
 
