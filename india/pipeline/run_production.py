@@ -50,6 +50,19 @@ CONFIRM_PHRASE = 'QUEUE THE NATIONAL RUN'
 # eleven thousand.
 CONSECUTIVE_FAILURE_LIMIT = 20
 
+# Earth Engine will not hold an unlimited number of pending tasks, and the
+# ceiling depends on the account. Rather than guess it, watch for the refusal
+# and stop cleanly when it comes: the run is meant to be done in sittings, and
+# "come back later" is the right answer, not a failure.
+_QUEUE_FULL_SIGNS = ('too many', 'quota', 'rate limit', 'resource exhausted',
+                     'concurrent', 'exceeded')
+
+
+def looks_like_a_full_queue(message):
+    """Is this Earth Engine saying 'not now', rather than 'this is broken'?"""
+    text = str(message).lower()
+    return any(sign in text for sign in _QUEUE_FULL_SIGNS)
+
 # The words that go on the collection itself, set once at the front of a run.
 _DOCS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                      'docs')
@@ -167,9 +180,11 @@ def run(confirm=None, cells=None, first_year=None, last_year=None,
     last_year       default: config.PRODUCTION_FIRST_YEAR / _LAST_YEAR.
     collection_path default: config.PRODUCTION_COLLECTION. Point it at the
                     sandbox to rehearse the same loop harmlessly.
-    max_tasks       stop after this many tasks have been queued. Earth Engine
-                    limits how many tasks may be pending at once; queue in
-                    sittings and re-run to continue. None means no limit.
+    max_tasks       stop after this many tasks have been queued. You do not
+                    need to set this: Earth Engine's ceiling on pending tasks
+                    depends on the account, and the run watches for the refusal
+                    and stops cleanly by itself. Set it only if you want a
+                    short sitting on purpose. None means no limit.
     describe        make the collection and put its description on it before
                     queueing anything (default). The description says what
                     the product is and how to read it, and nothing in an
@@ -220,6 +235,14 @@ def run(confirm=None, cells=None, first_year=None, last_year=None,
                   'lost: start again to continue.'.format(len(queued)))
             break
         except Exception as e:
+            if looks_like_a_full_queue(e):
+                print('\nEarth Engine will not take any more tasks just now '
+                      '({}).'.format(str(e)[:120]))
+                print('{} task(s) were queued this sitting, and {} of {} '
+                      'cell-years were looked at. Nothing is lost: let the '
+                      'queue drain and run this again to carry on.'
+                      .format(len(queued), i - 1, len(work)))
+                break
             # One bad cell-year must not end a run of thousands. Record it,
             # keep going, report the list at the end.
             failed.append((cell, year, str(e)))

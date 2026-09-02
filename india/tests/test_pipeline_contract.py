@@ -283,3 +283,43 @@ class CollectionDescriptionTests(unittest.TestCase):
                    verbose=False, describe=False)
         described.assert_not_called()
 
+
+class QueueFullTests(unittest.TestCase):
+    """Earth Engine's ceiling on pending tasks depends on the account, so the
+    run must recognise the refusal rather than rely on a guessed number."""
+
+    def test_it_knows_a_refusal_from_a_breakage(self):
+        from pipeline import run_production as rp
+        for message in ('Too many pending tasks',
+                        'Quota exceeded for tasks',
+                        'RESOURCE_EXHAUSTED: rate limit',
+                        'too many concurrent operations'):
+            self.assertTrue(rp.looks_like_a_full_queue(message), message)
+        for message in ('no write access to the collection',
+                        'Asset not found',
+                        'invalid band name'):
+            self.assertFalse(rp.looks_like_a_full_queue(message), message)
+
+    def test_a_full_queue_stops_the_sitting_without_counting_failures(self):
+        from unittest import mock
+        from pipeline import run_production as rp
+
+        calls = {'n': 0}
+
+        def refuse_after_three(cell, year, **kw):
+            calls['n'] += 1
+            if calls['n'] > 3:
+                raise RuntimeError('Too many pending tasks in the queue')
+            return object()
+
+        with mock.patch.object(rp, 'describe_destination'), \
+             mock.patch.object(rp.build, 'export',
+                               side_effect=refuse_after_three):
+            out = rp.run(confirm=rp.CONFIRM_PHRASE,
+                         cells=['A', 'B', 'C', 'D', 'E', 'F'],
+                         first_year=2019, last_year=2019,
+                         collection_path='projects/x/assets/y', verbose=False)
+        self.assertEqual(len(out['queued']), 3)
+        # a full queue is not a failure; nothing should be recorded as one
+        self.assertEqual(len(out['failed']), 0)
+
