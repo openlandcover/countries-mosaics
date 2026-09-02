@@ -147,3 +147,86 @@ class NamingTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ProductionRunTests(unittest.TestCase):
+    """The national run is expensive and writes into a published
+    collection. These pin the two things that stop it starting by
+    accident, and the span it covers."""
+
+    def test_span_matches_the_legacy_product(self):
+        self.assertEqual(C.PRODUCTION_FIRST_YEAR, 1986)
+        self.assertEqual(C.PRODUCTION_LAST_YEAR, 2025)
+
+    def test_run_refuses_without_the_confirmation_phrase(self):
+        from pipeline import run_production as rp
+        for wrong in (None, '', 'yes', rp.CONFIRM_PHRASE.lower()):
+            with self.assertRaises(ValueError):
+                rp.run(confirm=wrong)
+
+    def test_plan_covers_every_cell_and_year(self):
+        from pipeline import run_production as rp
+        # offline: cell_names falls back to the shipped grid snapshot
+        work = rp.plan()
+        cells = {c for c, _ in work}
+        years = {y for _, y in work}
+        self.assertEqual(len(cells), 283)
+        self.assertEqual(sorted(years)[0], C.PRODUCTION_FIRST_YEAR)
+        self.assertEqual(sorted(years)[-1], C.PRODUCTION_LAST_YEAR)
+        self.assertEqual(len(work), len(cells) * len(years))
+
+    def test_plan_rejects_a_backwards_year_span(self):
+        from pipeline import run_production as rp
+        with self.assertRaises(ValueError):
+            rp.plan(cells=['NC-43-X-D'], first_year=2020, last_year=2019)
+
+
+if __name__ == '__main__':
+    unittest.main()
+
+class ProductionRunSafetyTests(unittest.TestCase):
+    """The guards that stop a run of 11,320 doing harm when the set-up is
+    wrong rather than the cell."""
+
+    def test_a_run_refuses_the_offline_grid_snapshot(self):
+        # A real run must build the cell list from the grid asset. Falling
+        # back to the shipped snapshot would let it run against a list that
+        # is not the asset's.
+        from pipeline import run_production as rp
+        with self.assertRaises(RuntimeError):
+            rp.cell_names(strict=True)
+
+    def test_planning_still_works_offline(self):
+        from pipeline import run_production as rp
+        self.assertEqual(len(rp.cell_names()), 283)
+
+    def test_a_run_stops_after_repeated_failures(self):
+        # Wrong credentials, or no write access, would otherwise grind
+        # through every one of 11,320 cell-years failing each time.
+        from unittest import mock
+        from pipeline import run_production as rp
+        cells = ['C{}'.format(i) for i in range(rp.CONSECUTIVE_FAILURE_LIMIT + 30)]
+        with mock.patch.object(rp.build, 'export',
+                               side_effect=RuntimeError('no write access')):
+            out = rp.run(confirm=rp.CONFIRM_PHRASE, cells=cells,
+                         first_year=2019, last_year=2019,
+                         collection_path='projects/x/assets/y', verbose=False)
+        self.assertEqual(len(out['failed']), rp.CONSECUTIVE_FAILURE_LIMIT)
+        self.assertEqual(len(out['queued']), 0)
+
+    def test_one_bad_cell_year_does_not_end_the_run(self):
+        from unittest import mock
+        from pipeline import run_production as rp
+
+        def flaky(cell, year, **kw):
+            if cell == 'BAD':
+                raise RuntimeError('this one is broken')
+            return object()
+
+        with mock.patch.object(rp.build, 'export', side_effect=flaky):
+            out = rp.run(confirm=rp.CONFIRM_PHRASE,
+                         cells=['A', 'BAD', 'B'], first_year=2019,
+                         last_year=2019, collection_path='projects/x/assets/y',
+                         verbose=False)
+        self.assertEqual(len(out['queued']), 2)
+        self.assertEqual(len(out['failed']), 1)

@@ -38,16 +38,29 @@ PRODUCTION_COLLECTION = ('projects/mapbiomas-mosaics/assets/'
 SANDBOX_COLLECTION = ASSET_ROOT + '/shared_assets/ioln_mosaics_v2_sandbox'
 OUTPUT_COLLECTION = PRODUCTION_COLLECTION
 
+# The span a full national run covers, in phenological years. Chosen to match
+# the published legacy collection, which runs 1986-2025, so that v2 covers the
+# same ground as v1; owner approved this on 2026-09-02 by picking it from a
+# list of options, so the reasoning here is the pipeline's, not a statement of
+# his. Cells and years with no usable granules are skipped as archive gaps by
+# build.export's zero-scene check, not exported empty.
+PRODUCTION_FIRST_YEAR = 1986
+PRODUCTION_LAST_YEAR  = 2025
+
 # REPOINTED 2026-08-30 (owner instruction: everything a build reads
 # comes from mosaic_v2_inputs): our own 283-cell India subset of the
 # CIM grid (exported from the mapbiomas-workspace world grid the same
 # day, filtered by the v2026 boundary — which added NC-46-Y-D vs the
-# old 282). The world grid stays the upstream authority; this is the
+# 282 listed in the legacy script. The published legacy collection
+# itself holds 283 cells: those 282 plus NC-44-Y-B, which falls outside
+# the v2026 boundary and is not built here, so both products hold 283
+# cells, differing by one cell each way). The world grid stays the
+# upstream authority; this is the
 # pipeline's read path. Snapshot: data/vectors/grid_cells_india.geojson.
 GRID_ASSET   = 'projects/mapbiomas-india/assets/mosaic_v2_inputs/grid'
 GRID_ASSET_UPSTREAM = 'projects/mapbiomas-workspace/AUXILIAR/cim-world-1-250000'
 # ROLE RULE (owner, 2026-08-12 — do not swap these two):
-#   INDIA_ASSET   decides WHICH GRID CELLS exist (282 cells). Any cell
+#   INDIA_ASSET   decides WHICH GRID CELLS exist (283 cells). Any cell
 #                 enumeration — gate tables, export loops, coverage stats —
 #                 filters the grid against the BOUNDARY.
 #   REGIONS_ASSET clips the MOSAICS (the product's extent mask) and nothing

@@ -16,13 +16,27 @@ implementation: no code was copied from that repository, and the
 architecture, module structure, and masking/terrain-correction logic
 here are new. See `docs/` for the full method record.
 
-## Run one cell-year
+## Run it
 
-Open `notebooks/run_one_cell_year.ipynb`. Set the grid cell, the
-year(s), and the destination in the first cell, run the preview cell to
-see the mosaic, then run the export cell to queue the full asset. The
-default destination is the development sandbox, which is safe to write
-to.
+Open `notebooks/run_mosaics.ipynb`. It has two modes.
+
+**development** builds one grid cell for one or a few years, into a
+collection you own. This is the mode to use first, to check that the
+pipeline works after you clone it. Set your own Earth Engine project in
+`EE_PROJECT` and your own destination in `DEV_COLLECTION`; the
+collection is created for you if it is not there. A development run
+cannot write to the published collection.
+
+**production** builds every grid cell for every year, 1986 to 2025, into
+the published collection: 11,320 export tasks, days of compute, and it
+needs write access you must already hold. Nothing is queued until you
+paste a confirmation phrase.
+
+Either mode can be tracked at any time from the notebook's tracking
+cell, or from a terminal with
+`python -m pipeline.run_production --progress`. It reads the state from
+Earth Engine, so it works after you close the notebook, and from a
+different machine than the one that started the run.
 
 You need Python with the packages in `requirements.txt` installed
 (`pip install -r requirements.txt`) and a Google Earth Engine account
