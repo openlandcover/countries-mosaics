@@ -14,7 +14,12 @@ collection, which produced the original India mosaic script this
 project supersedes. The codebase itself is an independent, ground-up
 implementation: no code was copied from that repository, and the
 architecture, module structure, and masking/terrain-correction logic
-here are new. See `docs/` for the full method record.
+here are new.
+
+The full method record is the ATBD, `docs/atbd.md`: what the product is,
+how every step works, what was measured, and what its limits are. For a
+shorter read, `docs/version_1_to_version_2.md` sets the two versions side
+by side, row by row.
 
 ## Run it
 
