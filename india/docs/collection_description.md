@@ -55,9 +55,13 @@ text itself is written at the ATBD stage.
 - Written once, at ATBD time, from the schema doc; updated only when
   the recipe version bumps. THE FINAL TEXT NEEDS EXPLICIT OWNER
   CLEARANCE before it is set on the asset (owner instruction
-  2026-08-30) — this structure is approved, the words are not yet.
-- Set on the collection asset via ee.data.updateAsset (a small script
-  in scripts/, so it is versioned and re-runnable — the reviewers noted
-  nothing currently writes it; that script closes the gap).
+  2026-08-30). The words are now drafted, in
+  docs/collection_description.txt, and await that clearance.
+- Set on the collection asset by scripts/set_collection_description.py,
+  which reads the wording from docs/collection_description.txt. It shows
+  the text by default and writes only with --set, reads the result back
+  to confirm, and does nothing when the text is already in place. Only
+  the owner of the collection can run it, which is whoever ran the
+  export; the script says so plainly when it cannot write.
 - The collection asset also carries system:description-compatible
   fields where the Code Editor shows them.

@@ -1,0 +1,78 @@
+IOLN ANNUAL LANDSAT MOSAICS OF INDIA, VERSION 2
+
+WHAT THIS IS
+One finished satellite image of one part of India for one year, built
+by combining every usable Landsat picture taken that year. There is one
+image for each of 283 grid cells of the 1:250,000 map sheet series, for
+each year from 1986 to 2025. The year is the phenological year, 1 April
+to 31 March, so that both of India's crop seasons sit inside one image;
+the label is the starting year, so 2019 means April 2019 to March 2020.
+Pixels are 30 m, nominally: the grid is in degrees (EPSG:4326), so a
+pixel is about 30 m and not exactly 30 m. Made by the India Open
+LandCover Network. It follows the earlier India mosaic series, which
+remains available as version 1.
+
+HOW IT WAS MADE
+Landsat Collection 2 surface reflectance, every satellite flying that
+year. Cloud and shadow removed by three checks: the archive's own
+flags, a temperature check (cloud is colder than the ground it hides),
+and a brightness cut for cloud the flags missed. Hillside lighting
+divided out using physics rather than a fit. Sun and view angles
+normalised (BRDF). Older satellites converted onto the Landsat 8 and 9
+basis. Then, for each pixel and each layer, the year is summarised:
+a typical value for the whole year, one for its greenest quarter, one
+for its least-green quarter, the change between those two, and a
+robust measure of spread.
+
+READING THE NUMBERS
+Every value is stored as a whole number and must be decoded first.
+  reflectance bands      true value = stored x 0.0001
+  surface temperature    kelvin = stored x 0.1
+  ground-cover shares    the stored number IS the percentage
+  index bands            true value = stored x 0.0001, never shifted
+  ndfi, bci, ibi levels  true value = stored / 100 - 1
+  their spread and swing true value = stored / 100
+  terrain               slope = stored / 100 degrees; height above the
+                        nearest stream = stored / 10 metres; elevation
+                        in whole metres
+  longitude, latitude    degrees = stored / 10000
+  count bands            plain whole numbers, no conversion
+Every image also carries these formulas as its own properties.
+
+BEFORE YOU USE IT
+Some values are labels, not measurements. In the ndfi level and spread
+bands, -10 means the pixel is lasting water and -20 means lasting snow;
+in the ndfi swing band, -999 means there was no real pair of seasonal
+values to subtract. Remove these before averaging, rescaling or fitting
+anything. A decision tree can use them as they stand.
+The two aspect bands are damped by slope and are meant to be used as
+they are; never rebuild a compass direction from them.
+The count bands say how much evidence sits under a pixel. Read them to
+judge how far to trust a value, but never train a model on them: they
+record the history of the satellite archive, not the ground.
+Longitude and latitude are meant to be used as inputs.
+
+WHAT IT DOES NOT DO WELL
+Before 2000 the archive is thin, and in places a pixel-year rests on
+one or two observations; the count bands say where. The temperature
+check cannot run in those years, so every cloud flag is upheld, which
+is the cautious choice. Cell-years with no usable imagery are left out
+rather than filled, so gaps in the record are real. Landsat 7 after
+2003 has blank stripes; they are filled only where nothing else was
+available, and faint marks remain in 2012. In steep wet forest the
+terrain correction overshoots slightly in the near-infrared.
+
+TERMS, CITATION AND CONTACT
+There is no formal licence on this product yet. An open licence is
+intended, but the India Open LandCover Network is not yet a body that
+can hold one, so none is claimed. Use it, and credit the India Open
+LandCover Network. For anything beyond that, write to the address
+below.
+Cite as: India Open LandCover Network (IOLN), 2026. IOLN annual Landsat
+mosaics of India, version 2. No DOI has been minted; cite the document
+identifier IOLN-ATBD-MOS-002 and the date you accessed the data.
+The full method record is the ATBD, in the repository below, which
+explains every step, what was measured, and what the limits are.
+Code and documents: github.com/openlandcover/countries-mosaics, under
+india/.
+Comments and questions: mdmadhu@gmail.com
