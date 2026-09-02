@@ -1,3 +1,6 @@
+# NOTE (2026): superseded for India by the independent v2 pipeline in
+# india/ of this fork; kept here unchanged as the original collection-1
+# script.
 """
 Google Earth Engine Landsat Mosaic Generator for India
 ===========================================================
