@@ -170,8 +170,35 @@ between a stray keypress and eleven thousand jobs.
 Run the first box again so the change takes effect, then run the
 **queueing box**.
 
-The first time, it also creates the collection and writes its
-description, so the folder explains itself from the start.
+### Setting up the collection itself
+
+The first time you run the queueing box, it does two things before it
+queues anything.
+
+It **creates the collection**, if it is not already there. A collection
+is the folder inside Earth Engine that the 11,320 mosaics will sit in.
+
+It **writes the collection's description**: a page of plain text saying
+what the product is, how to decode every layer, what to watch out for,
+and who to credit. Anyone who finds the collection later reads that and
+knows what they are looking at. Nothing else ever writes it, which is
+why it is done here, once, at the very start rather than at the end.
+
+The words come from `docs/collection_description.txt` in this
+repository. If you want to read them before they go on, open that file.
+
+If for any reason the description cannot be written, **the run carries
+on regardless**. Building the product matters more than labelling it.
+You will see a line saying it could not be written, and you can put it
+on afterwards, at any time, with:
+
+```
+python scripts/set_collection_description.py --set
+```
+
+That command shows you the text and writes nothing unless you add
+`--set`. Running it twice does nothing the second time. Only the owner
+of the collection can run it, which is whoever ran the export.
 
 ## Step 5. Let it fill up, then come back
 
