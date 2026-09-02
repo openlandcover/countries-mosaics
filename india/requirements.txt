@@ -1,0 +1,5 @@
+# Runtime dependencies for the IOLN v2 mosaic pipeline.
+# Pinned to the versions the pipeline was built and verified against
+# (2026-08-30); newer earthengine-api versions are usually fine but
+# verify a trial export before a national run.
+earthengine-api>=1.5,<2
