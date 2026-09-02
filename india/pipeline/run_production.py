@@ -31,6 +31,7 @@ Command line:
 """
 
 import argparse
+import io
 import json
 import os
 
@@ -48,6 +49,11 @@ CONFIRM_PHRASE = 'QUEUE THE NATIONAL RUN'
 # "wrong credentials" or "no write access" into one message rather than
 # eleven thousand.
 CONSECUTIVE_FAILURE_LIMIT = 20
+
+# The words that go on the collection itself, set once at the front of a run.
+_DOCS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                     'docs')
+DESCRIPTION_FILE = os.path.join(_DOCS, 'collection_description.txt')
 
 # Snapshot of the grid, used only if the Earth Engine asset cannot be read.
 _GRID_SNAPSHOT = os.path.join(
@@ -98,8 +104,60 @@ def plan(cells=None, first_year=None, last_year=None, strict=False):
     return [(cell, year) for cell in cells for year in years]
 
 
+def describe_destination(collection_path):
+    """Make the collection if needed, and put its description on it.
+
+    Done once, at the front of a run, because an export makes images and
+    not the folder they sit in: nothing else would ever write it. A run
+    that stops half way has still left the collection describing itself.
+
+    Never fatal. A run that cannot write a description can still build
+    the product, and the description can be set afterwards with
+    scripts/set_collection_description.py. So this reports and carries on.
+    """
+    try:
+        ee.data.getAsset(collection_path)
+    except Exception:
+        try:
+            ee.data.createAsset({'type': 'IMAGE_COLLECTION'}, collection_path)
+            print('  created the collection {}'.format(collection_path))
+        except Exception as e:
+            print('  could not create {}: {}'.format(collection_path, e))
+            return False
+
+    try:
+        with io.open(DESCRIPTION_FILE, encoding='utf-8') as handle:
+            text = handle.read().strip('\n')
+    except Exception as e:
+        print('  no description written: cannot read {} ({})'
+              .format(DESCRIPTION_FILE, e))
+        return False
+    if not text:
+        print('  no description written: {} is empty'.format(DESCRIPTION_FILE))
+        return False
+
+    try:
+        existing = (ee.data.getAsset(collection_path)
+                    .get('properties', {}).get('description'))
+        if existing == text:
+            print('  the collection already carries this description')
+            return True
+        ee.data.updateAsset(collection_path,
+                            {'properties': {'description': text}},
+                            ['properties.description'])
+        print('  description written to the collection ({} characters)'
+              .format(len(text)))
+        return True
+    except Exception as e:
+        print('  could not write the description: {}'.format(e))
+        print('  the run can go ahead; set it afterwards with '
+              'scripts/set_collection_description.py')
+        return False
+
+
 def run(confirm=None, cells=None, first_year=None, last_year=None,
-        collection_path=None, max_tasks=None, verbose=True):
+        collection_path=None, max_tasks=None, verbose=True,
+        describe=True):
     """
     Queue the national run. Returns a summary dictionary.
 
@@ -112,6 +170,11 @@ def run(confirm=None, cells=None, first_year=None, last_year=None,
     max_tasks       stop after this many tasks have been queued. Earth Engine
                     limits how many tasks may be pending at once; queue in
                     sittings and re-run to continue. None means no limit.
+    describe        make the collection and put its description on it before
+                    queueing anything (default). The description says what
+                    the product is and how to read it, and nothing in an
+                    export writes it, so it is done here, once, at the front
+                    of the run. Already correct, and it is left alone.
     """
     if confirm != CONFIRM_PHRASE:
         raise ValueError(
@@ -123,6 +186,18 @@ def run(confirm=None, cells=None, first_year=None, last_year=None,
     work = plan(cells, first_year, last_year, strict=True)
 
     print('national run: {} cell-years -> {}'.format(len(work), destination))
+
+    if describe:
+        try:
+            describe_destination(destination)
+        except Exception as e:
+            # The product matters more than its label. A description
+            # can be set afterwards; a run of days should not be lost
+            # because of it.
+            print('  could not describe the collection: {}'.format(e))
+            print('  carrying on; set it later with '
+                  'scripts/set_collection_description.py')
+
     if max_tasks is not None:
         print('  stopping after {} queued task(s) this sitting'
               .format(max_tasks))

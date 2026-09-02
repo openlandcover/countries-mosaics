@@ -6,6 +6,7 @@ accidental duplicate fails HERE, not in a shipped asset. The live end-to-end che
 graph, the no-shadowed-names probe) lives in the trial-export
 verification — a graph evaluation cannot run offline.
 """
+import io
 import unittest
 
 from pipeline import config as C
@@ -230,3 +231,55 @@ class ProductionRunSafetyTests(unittest.TestCase):
                          verbose=False)
         self.assertEqual(len(out['queued']), 2)
         self.assertEqual(len(out['failed']), 1)
+
+
+class CollectionDescriptionTests(unittest.TestCase):
+    """The collection has to describe itself. Nothing in an export writes
+    that, so the run does it once, before it queues anything."""
+
+    def test_the_shipped_text_exists_and_says_what_it_should(self):
+        from pipeline import run_production as rp
+        with io.open(rp.DESCRIPTION_FILE, encoding='utf-8') as handle:
+            text = handle.read()
+        self.assertGreater(len(text), 500)
+        for phrase in ('IOLN ANNUAL LANDSAT MOSAICS OF INDIA',
+                       'READING THE NUMBERS', 'BEFORE YOU USE IT'):
+            self.assertIn(phrase, text)
+
+    def test_the_description_is_written_before_any_export(self):
+        from unittest import mock
+        from pipeline import run_production as rp
+        order = []
+        with mock.patch.object(rp, 'describe_destination',
+                               side_effect=lambda p: order.append('describe')), \
+             mock.patch.object(rp.build, 'export',
+                               side_effect=lambda *a, **k: order.append('export')):
+            rp.run(confirm=rp.CONFIRM_PHRASE, cells=['A', 'B'],
+                   first_year=2019, last_year=2019,
+                   collection_path='projects/x/assets/y', verbose=False)
+        self.assertEqual(order[0], 'describe')
+        self.assertEqual(order.count('describe'), 1)
+
+    def test_a_failed_description_does_not_stop_the_run(self):
+        # The product matters more than its label: the description can be
+        # set afterwards, so this must never be fatal.
+        from unittest import mock
+        from pipeline import run_production as rp
+        with mock.patch.object(rp, 'describe_destination',
+                               side_effect=RuntimeError('no permission')), \
+             mock.patch.object(rp.build, 'export', return_value=object()):
+            out = rp.run(confirm=rp.CONFIRM_PHRASE, cells=['A'],
+                         first_year=2019, last_year=2019,
+                         collection_path='projects/x/assets/y', verbose=False)
+        self.assertEqual(len(out['queued']), 1)
+
+    def test_describing_can_be_switched_off(self):
+        from unittest import mock
+        from pipeline import run_production as rp
+        with mock.patch.object(rp, 'describe_destination') as described, \
+             mock.patch.object(rp.build, 'export', return_value=None):
+            rp.run(confirm=rp.CONFIRM_PHRASE, cells=['A'], first_year=2019,
+                   last_year=2019, collection_path='projects/x/assets/y',
+                   verbose=False, describe=False)
+        described.assert_not_called()
+

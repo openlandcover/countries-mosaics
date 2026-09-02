@@ -6,15 +6,13 @@ assets are authoritative and the pipeline reads them from record; the
 GeoJSON files exist so the vectors cannot be lost with the assets.
 Refuses to overwrite a live asset: give --dest a fresh id.
 
-Snapshots taken 2026-08-30 (held in the private archive; of the vector
-snapshots, only grid_cells_india.geojson is part of this release):
+Snapshots taken 2026-08-30:
   india_boundary_official.geojson          (253 features)
   ioln_classification_regions.geojson      (8 regions)
   ioln_classification_regions_v2.geojson   (8 regions)
-NOTE (open item, 2026-08-30): config.REGIONS_ASSET points at a _v3
-vector that does NOT exist in the project; production is unaffected
-because the painted regions_mask_v1 raster is read instead. Owner to
-rule which vector is authoritative before the fallback path is fixed.
+RESOLVED (2026-09-02): an earlier note here warned that
+config.REGIONS_ASSET pointed at a vector that did not exist. It now
+points at mosaic_v2_inputs/regions, which does exist and was checked.
 
 Usage:
   python scripts/upload_vectors.py --file data/vectors/<name>.geojson \

@@ -5,7 +5,7 @@ Every tunable lives here. Nothing downstream should hardcode an asset id, a thre
 or a band name.
 
 See docs/design_decisions.md for the reasoning behind each choice; the
-full method record is the ATBD (docs/atbd.md).
+full method record is the ATBD, docs/ (see docs/README.md).
 """
 
 # ============================================================================
