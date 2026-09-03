@@ -286,6 +286,9 @@ def apply_band_types(mosaic):
     Everything is int16 except:
       - lon/lat        int32 upstream (97.4 deg x 10000 overflows int16) --
                        preserved, NOT recast, or they would truncate
+      - C.UINT8_BANDS  uint8 (owner ruling 2026-09-03) -- small numbers,
+                       see config.py for the evidence behind the list
+      - C.INT8_BANDS   int8 (owner ruling 2026-09-03) -- same, signed
     (The evi2 int32 exception died with AMENDMENT 1, 2026-09-01: the
     unshifted ceiling 2.5 x 10000 = 25000 fits int16.)
 
@@ -295,16 +298,25 @@ def apply_band_types(mosaic):
     this, left the export set 2026-08-13 -- register C24.)
 
     Bands already typed upstream (entropy, terrain) pass through their own
-    cast unchanged.
+    cast unchanged. This function is the ONLY place that decides a band's
+    stored type -- it is a blanket recast, so a per-band cast set upstream
+    (e.g. sources.observation_counts's quarters.toInt8()) is overwritten
+    here regardless; the narrow-type lists above are what actually take
+    effect on export.
     """
     names = mosaic.bandNames()
     coord = ee.List(['lon', 'lat'])
-    rest = names.removeAll(coord)
+    uint8 = ee.List(C.UINT8_BANDS)
+    int8 = ee.List(C.INT8_BANDS)
+    narrow = uint8.cat(int8).cat(coord)
+    rest = names.removeAll(narrow)
     # ROUND BEFORE CASTING (C26 ruling 7): EE casts truncate toward zero,
     # which biases every band up to half a unit -- sign-dependently on the
     # signed range bands. One round removes it for every band in the contract.
     return ee.Image.cat([
         mosaic.select(rest).round().toInt16(),
+        mosaic.select(uint8).round().toUint8(),
+        mosaic.select(int8).round().toInt8(),
         mosaic.select(coord),
     ])
 

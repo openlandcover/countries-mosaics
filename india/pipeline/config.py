@@ -1162,6 +1162,43 @@ BAND_ORDER = (
     # v2, owner 2026-08-30 -- was 116)
 
 # ============================================================================
+# NARROW STORAGE TYPES (owner ruling 2026-09-03)
+# ============================================================================
+# 32 of the 117 bands hold small numbers and do not need a full int16 box.
+# Every band's storage type and legal range is listed in the ATBD, Appendix A;
+# Section 5.10 describes the convention. The lists below were set from those
+# legal ranges plus measured values: a 92-image sample survey across 8 cells,
+# and for the count bands a full national sweep of all 283 grid cells (the
+# highest usable_count anywhere in India, in any year, is 108; q1..q4_count
+# reach 31-32 -- all comfortably inside 0-255).
+#
+# ndfi_mad was checked and EXCLUDED: its legal range is 0-200 with reserved
+# codes -10/-20, and no 8-bit type holds -20 and 200 at once.
+#
+# snow_count is bounded by usable_count by construction (sources.py counts
+# into snow_count only pixels that also satisfy the same nir-mask test that
+# usable_count counts), so its national ceiling cannot exceed 108 either.
+#
+# tir_count comes from the national temperature record, which applies its own
+# looser clear-sky test (THERMAL_FROM_RECORD, masking.thermal_bands_from_record),
+# so it is not the same population as usable_count and no such bound applies.
+# Included on the owner's ruling, on the sample evidence (highest seen: 112).
+UINT8_BANDS = (
+    'bci_mad', 'bci_median', 'gv_mad', 'gv_median', 'gv_median_dry',
+    'gv_median_wet', 'ibi_mad', 'ibi_median', 'npv_mad', 'npv_median',
+    'npv_median_dry', 'npv_median_wet', 'quarters_present', 'shade_mad',
+    'shade_median', 'shade_median_dry', 'shade_median_wet', 'soil_mad',
+    'soil_median', 'soil_median_dry', 'soil_median_wet', 'q1_count',
+    'q2_count', 'q3_count', 'q4_count', 'usable_count', 'snow_count',
+    'tir_count',
+)   # 28 bands, legal range fits 0-255
+
+INT8_BANDS = ('gv_swing', 'npv_swing', 'shade_swing', 'soil_swing')
+    # 4 bands, legal range fits -128-127; no sentinel/refusal code among
+    # them (unlike ndfi_swing, which carries the -999 sentinel and is not
+    # on this list)
+
+# ============================================================================
 # AGGREGATION-SAFE ILLUMINATION TERM (2026-08-20)
 # ============================================================================
 # cos(i) expands into a form LINEAR in three terrain-only quantities with

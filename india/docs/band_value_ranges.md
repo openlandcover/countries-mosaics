@@ -129,7 +129,8 @@ rounded outward. Measured envelope: tcb (59, 13647), tcg (−308, 2200), tcw
 seed's tcg max of 6000 was ~3× too wide and had squashed the vegetation term).
 NEVER change these: they renumber every BCI value in the archive.
 
-**Bands.** `bci_median`, `bci_median_dry` (0–200, (x+1)×100, int16). The DRY
+**Bands.** `bci_median`, `bci_median_dry` (0–200, (x+1)×100, int16 — narrowed
+to uint8 on 2026-09-03, see the note at the end of this section). The DRY
 variant carries the built-vs-bare margin — monsoon-wet dark soils (vertisols)
 creep toward "built" in the wet season. India caveats on record: Rann salt
 crust will read extreme-bright; check both surfaces in training data.
@@ -174,6 +175,18 @@ parent units, tir Kelvin ×10.
 uint16/byte — required to carry negative reflectance retrievals, signed
 ranges, and the −999 sentinel; values are unchanged, only the container.
 No rescaling action needed.
+
+> **Partly superseded, 2026-09-03 (owner ruling).** The "int16 everywhere"
+> divergence above still holds for the bands the reasoning names — those
+> carrying negative retrievals, signed ranges, or the −999 sentinel. It no
+> longer holds for 32 bands whose legal range never needed the room: the
+> SMA fractions and their swings, `bci`/`ibi` median and mad, and the
+> observation counts, which now ship as uint8 (28 bands) or int8 (4 bands),
+> closer to the legacy byte convention. Ranges, decoding and values are
+> untouched — only the container, again. `ndfi_*` keeps int16 (the −999
+> sentinel and the −10/−20 refusal codes need it). The current, binding
+> per-band list is the ATBD, Appendix A; `pipeline/config.py` holds it as
+> `UINT8_BANDS` / `INT8_BANDS`.
 
 ## Legacy vs new — the band diff (quantity level)
 

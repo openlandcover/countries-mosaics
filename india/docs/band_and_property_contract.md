@@ -301,3 +301,42 @@ of this release), BEFORE the national run (no archive rebuild):
 - Gate: this ruling approves code, documents, tests and the sandbox
   re-check only. The national run needs its own go. Owner will
   rework external readers that expected the old shift.
+
+## AMENDMENT 2 — narrow storage for 32 small-ranged bands (owner ruling 2026-09-03)
+
+Fresh ruling amending the sealed contract above, given BEFORE the
+national run (no archive rebuild):
+
+- 32 bands whose legal range never needed 16 bits now ship in 8:
+  UInt8 (0-255) for 28 bands — the gv/npv/soil/shade medians (annual,
+  dry, wet) and MADs, bci/ibi median and mad, quarters_present, and
+  the six count bands (usable, tir, snow, q1..q4) — and Int8
+  (-128 to 127) for 4 bands: gv_swing, npv_swing, soil_swing,
+  shade_swing. Everything else is unchanged: Int16 for the rest,
+  Int32 for lon/lat.
+- Nothing else moves. Band names, band order, band count (117),
+  legal ranges, decoding rules, reserved codes and image properties
+  are all untouched. This is a container change only — the stored
+  integer in each of these bands is bit-for-bit what it was.
+- ndfi_mad, ndfi_swing and the rest of the NDFI family keep Int16:
+  the -999 sentinel and the -10/-20 refusal codes cannot coexist
+  with a 0-200 range in any 8-bit type.
+- Evidence: legal ranges from the band contract, a 92-image sample
+  survey over 8 cells, and for the count bands a full national sweep
+  of all 283 grid cells (highest usable_count in India in any year:
+  108; q1..q4_count: 31-32). snow_count is bounded by usable_count
+  by construction. tir_count rests on the sample evidence (highest
+  seen 112) plus the owner's ruling: it is drawn from the national
+  temperature record's looser clear-sky test, so it has no analytic
+  bound against usable_count.
+- Verified by sandbox re-export (NC-43-X-D 2019): all 117 bands carry
+  the intended type, and all 32 narrowed bands are pixel-for-pixel
+  identical to the pre-change asset. No value was clipped — the
+  closest approach to a ceiling is bci_median at 200 of 255.
+- Measured effect on stored size: about 3% smaller per image (a
+  cell-year fell from 3,589 MB to 3,477 MB, a figure that also
+  includes Amendment 1's evi2 narrowing). Far less than the raw byte
+  arithmetic suggests, because compression was already absorbing most
+  of the unused space.
+- Gate: this ruling approves code, documents and the sandbox
+  re-check only. The national run needs its own go.
